@@ -1,4 +1,5 @@
 from tp1.utils.capture import Capture
+import pygal
 
 
 class Report:
@@ -37,10 +38,41 @@ class Report:
         Generate graph and array
         """
         if param == "graph":
-            # TODO: generate graph
-            graph = ""
-            self.graph = graph
+
+            stats = self.capture.sort_network_protocols()
+
+            chart = pygal.Bar()
+            chart.title = "Network Traffic by IP"
+
+            chart.x_labels = list(stats.keys())
+
+            protocols = set()
+            for data in stats.values():
+                protocols.update(data["protocols"].keys())
+
+            for proto in protocols:
+                values = []
+
+                for ip in stats:
+                    values.append(stats[ip]["protocols"].get(proto, 0))
+
+                chart.add(proto, values)
+
+            graph = chart.render(is_unicode=True)
+            chart.render_to_file("network_graph.svg")
+
+            self.graph = "\n===== Graph =====\n\n" + graph
         elif param == "array":
-            # TODO: generate array
-            array = ""
+
+            stats = self.capture.sort_network_protocols()
+
+            array = "\n===== Network Statistics Table =====\n\n"
+            array += "IP\t\tMAC\t\tProtocol\tCount\n"
+
+            for ip, data in stats.items():
+                mac = data["mac"]
+
+                for proto, count in data["protocols"].items():
+                    array += f"{ip}\t{mac}\t{proto}\t{count}\n"
+
             self.array = array

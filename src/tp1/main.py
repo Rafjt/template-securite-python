@@ -11,7 +11,7 @@ def main():
     capture.analyse("tcp")
     summary = capture.get_summary()
 
-    filename = "report.pdf"
+    filename = "report.txt"
     report = Report(capture, filename, summary)
     report.generate("graph")
     report.generate("array")
