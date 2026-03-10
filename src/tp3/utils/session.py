@@ -1,5 +1,8 @@
 from src.tp3.utils.captcha import Captcha
+import random
 
+s = requests.Session()
+s.headers.update({"User-Agent": "Mozilla/5.0"})
 
 class Session:
     """
@@ -31,24 +34,30 @@ class Session:
         captcha = Captcha(self.url)
         captcha.capture()
         captcha.solve()
-
+        ran = random.randrange(1000, 2000, 1)
+        print(ran)
+        self.captcha_value = captcha.value
         self.captcha_value = captcha.get_value()
-        self.flag_value = "FIXME"
+        self.flag_value = ran
+        self.payload = {'flag': ran, 'captcha': self.captcha_value}
 
     def submit_request(self):
         """
         Sends the flag and captcha.
         """
+        self.response = requests.post(self.url, data=self.payload)
+        print(self.response.status_code)
 
     def process_response(self):
         """
         Processes the response.
+        en gros regarder si la réponse c'est une 200 et en extraire le flag IMO
         """
 
     def get_flag(self):
         """
         Returns the valid flag.
-
+        juste un geter
         Returns:
             str: The valid flag.
         """
