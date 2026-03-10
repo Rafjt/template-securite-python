@@ -1,8 +1,7 @@
 from src.tp3.utils.captcha import Captcha
 import random
+import requests
 
-s = requests.Session()
-s.headers.update({"User-Agent": "Mozilla/5.0"})
 
 class Session:
     """
@@ -34,25 +33,45 @@ class Session:
         captcha = Captcha(self.url)
         captcha.capture()
         captcha.solve()
-        ran = random.randrange(1000, 2000, 1)
-        print(ran)
         self.captcha_value = captcha.value
         self.captcha_value = captcha.get_value()
-        self.flag_value = ran
-        self.payload = {'flag': ran, 'captcha': self.captcha_value}
+        self.current_session = captcha.session
+        if not hasattr(self, "current"):
+            self.current = 1000
+        else:
+            self.current += 1
+
+        self.flag_value = self.current
+        self.payload = {'flag': self.flag_value, 'captcha': self.captcha_value, 'submit': 'envoyer'}
+        print(self.payload)
 
     def submit_request(self):
         """
         Sends the flag and captcha.
         """
-        self.response = requests.post(self.url, data=self.payload)
-        print(self.response.status_code)
+        self.response = self.current_session.post(self.url, data=self.payload)
+        #print(self.response.text)
+
 
     def process_response(self):
         """
         Processes the response.
         en gros regarder si la réponse c'est une 200 et en extraire le flag IMO
         """
+
+        text = self.response.text.lower()
+
+        if "incorrect flag" in text:
+            return False
+
+        if "incorrect captcha" in text:
+            return False
+
+        if "correct" in text:
+            self.valid_flag = self.flag_value
+            print(self.response.text)
+            print("FLAG TROUVEE :", self.valid_flag)
+            return True
 
     def get_flag(self):
         """
