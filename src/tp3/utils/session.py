@@ -1,6 +1,8 @@
-from src.tp3.utils.captcha import Captcha
-import random
+import hashlib
+
+from src.tp3.utils.captcha  import Captcha
 import requests
+import re
 
 
 class Session:
@@ -26,6 +28,11 @@ class Session:
         self.flag_value = ""
         self.valid_flag = ""
 
+        if "captcha1" in url:
+            self.challenge = 1
+        elif "captcha2" in url:
+            self.challenge = 2
+
     def prepare_request(self):
         """
         Prepares the request for sending by capturing and solving the captcha.
@@ -36,13 +43,20 @@ class Session:
         self.captcha_value = captcha.value
         self.captcha_value = captcha.get_value()
         self.current_session = captcha.session
-        if not hasattr(self, "current"):
-            self.current = 1000
-        else:
-            self.current += 1
+        if self.challenge == 1:
+            # Dans le test initiale on avait self.current = 1000 mais pour aller plus vite on le commente une fois trouvé
+            self.current = 1578
+        elif self.challenge == 2:
+            if not hasattr(self, "current"):
+                self.current = 2000
+            else:
+                self.current += 1
 
         self.flag_value = self.current
         self.payload = {'flag': self.flag_value, 'captcha': self.captcha_value, 'submit': 'envoyer'}
+        insert = str(self.flag_value) + str(self.captcha_value)
+        self.hashed_payload = hashlib.md5(insert.encode()).hexdigest()
+        #print(self.hashed_payload)
         print(self.payload)
 
     def submit_request(self):
@@ -50,7 +64,7 @@ class Session:
         Sends the flag and captcha.
         """
         self.response = self.current_session.post(self.url, data=self.payload)
-        #print(self.response.text)
+        print(len(self.response.text))
 
 
     def process_response(self):
@@ -58,19 +72,28 @@ class Session:
         Processes the response.
         en gros regarder si la réponse c'est une 200 et en extraire le flag IMO
         """
+        if self.challenge == 1:
+            text = self.response.text.lower()
 
-        text = self.response.text.lower()
+            if "incorrect flag" in text:
+                return False
 
-        if "incorrect flag" in text:
-            return False
+            if "incorrect captcha" in text:
+                return False
 
-        if "incorrect captcha" in text:
-            return False
+            if "correct" in text:
+                self.valid_flag = self.flag_value
+                print(self.response.text)
+                print("FLAG TROUVEE :", self.valid_flag)
+                return True
 
-        if "correct" in text:
+        elif self.challenge == 2:
+            if len(self.response.text) == 1246 or len(self.response.text) == 1017:
+                return False
             self.valid_flag = self.flag_value
             print(self.response.text)
             print("FLAG TROUVEE :", self.valid_flag)
+
             return True
 
     def get_flag(self):
