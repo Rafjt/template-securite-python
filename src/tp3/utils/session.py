@@ -32,6 +32,8 @@ class Session:
             self.challenge = 1
         elif "captcha2" in url:
             self.challenge = 2
+        elif "captcha3" in url:
+            self.challenge = 3
 
     def prepare_request(self):
         """
@@ -50,6 +52,9 @@ class Session:
             if not hasattr(self, "current"):
                 # Dans le test initiale on avait self.current = 2000 mais pour aller plus vite on le commente une fois trouvé
                 self.current = 2756
+        elif self.challenge == 3:
+            if not hasattr(self, "current"):
+                self.current = 3000
             else:
                 self.current += 1
 
@@ -90,6 +95,22 @@ class Session:
 
         elif self.challenge == 2:
             if len(self.response.text) == 1246 or len(self.response.text) == 1017:
+                return False
+            self.valid_flag = self.flag_value
+            print(self.response.text)
+            print("FLAG TROUVEE :", self.valid_flag)
+            return True
+
+        elif self.challenge == 3:
+            if len(self.response.text) == 1251 or len(self.response.text) == 1240:
+                return False
+            self.valid_flag = self.flag_value
+            print(self.response.text)
+            print("FLAG TROUVEE :", self.valid_flag)
+            return True
+
+#        elif self.challenge == 3:
+            if "Ok" in self.response.text:
                 return False
             self.valid_flag = self.flag_value
             print(self.response.text)
