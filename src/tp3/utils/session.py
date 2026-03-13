@@ -48,7 +48,8 @@ class Session:
             self.current = 1578
         elif self.challenge == 2:
             if not hasattr(self, "current"):
-                self.current = 2000
+                # Dans le test initiale on avait self.current = 2000 mais pour aller plus vite on le commente une fois trouvé
+                self.current = 2756
             else:
                 self.current += 1
 
