@@ -34,6 +34,8 @@ class Session:
             self.challenge = 2
         elif "captcha3" in url:
             self.challenge = 3
+        elif "captcha4" in url:
+            self.challenge = 4
 
     def prepare_request(self):
         """
@@ -56,9 +58,9 @@ class Session:
             if not hasattr(self, "current"):
                 # Dans le test initiale on avait self.current = 3000 mais pour aller plus vite on le commente une fois trouvé
                 self.current = 3889
-        elif self.challenge == 3:
+        elif self.challenge == 4:
             if not hasattr(self, "current"):
-                self.current = 3000
+                self.current = 7000
             else:
                 self.current += 1
 
@@ -73,8 +75,19 @@ class Session:
         """
         Sends the flag and captcha.
         """
-        self.response = self.current_session.post(self.url, data=self.payload)
-        print(len(self.response.text))
+        headers = {
+            "Magic-Word": "please"
+        }
+        if self.challenge == 4:
+            self.response = self.current_session.post(
+                self.url,
+                headers=headers,
+                data=self.payload
+            )
+            print(len(self.response.text))
+        else:
+            self.response = self.current_session.post(self.url,data=self.payload,)
+            print(len(self.response.text))
 
 
     def process_response(self):
@@ -113,14 +126,24 @@ class Session:
             print("FLAG TROUVEE :", self.valid_flag)
             return True
 
-#        elif self.challenge == 3:
-            if "Ok" in self.response.text:
-                return False
-            self.valid_flag = self.flag_value
-            print(self.response.text)
-            print("FLAG TROUVEE :", self.valid_flag)
+        if self.challenge == 4:
 
-            return True
+            text = self.response.text.lower()
+
+            if "incorrect flag" in text:
+                return False
+
+            if "incorrect captcha" in text:
+                return False
+
+            if "correct" in text:
+                self.valid_flag = self.flag_value
+
+                print(self.response.text)
+
+                print("FLAG TROUVEE :", self.valid_flag)
+
+                return True
 
     def get_flag(self):
         """
