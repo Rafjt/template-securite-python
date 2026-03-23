@@ -67,15 +67,12 @@ class Session:
         elif self.challenge == 5:
             if not hasattr(self, "current"):
                 # Dans le test initiale on avait self.current = 8000 mais pour aller plus vite on le commente une fois trouvé
-                self.current = 8000
+                self.current = 8632
             else:
                 self.current += 1
 
         self.flag_value = self.current
-        if self.challenge == 5:
-            self.payload = {'flag': f" {self.flag_value}", 'submit': 'envoyer'}
-        else :
-            self.payload = {'flag': f" {self.flag_value}", 'captcha': self.captcha_value, 'submit': 'envoyer'}
+        self.payload = {'flag': f" {self.flag_value}", 'captcha': self.captcha_value, 'submit': 'envoyer'}
         insert = str(self.flag_value) + str(self.captcha_value)
         self.hashed_payload = hashlib.md5(insert.encode()).hexdigest()
         #print(self.hashed_payload)
@@ -169,10 +166,10 @@ class Session:
             text = self.response.text.lower()
             print(text)
 
-            if "incorrect flag" in text:
+            if "incorrect flag." in text.lower():
                 return False
 
-            if "incorrect captcha" in text:
+            if "incorrect captcha." in text.lower():
                 return False
 
             if len(text) != 1194:
